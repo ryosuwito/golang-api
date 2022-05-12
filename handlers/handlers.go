@@ -18,10 +18,7 @@ func HandlerReq() {
 	r.HandleFunc("/user", CreateUsers).Methods("OPTIONS", "POST")
 
 	//Find User Berdasarkan Limit
-	r.HandleFunc("/users", GetUsersLimit).Queries(
-		"limit", "{limit}",
-		"offset", "{offset}",
-	).Methods("OPTIONS", "GET")
+	r.HandleFunc("/users", GetUsersLimit).Methods("OPTIONS", "GET")
 
 	//Find User Berdasarkan Id
 	r.HandleFunc("/user/{id}", GetUserId).Methods("OPTIONS", "GET")
@@ -43,10 +40,7 @@ func HandlerReq() {
 	r.HandleFunc("/product", CreateProduct).Methods("OPTIONS", "POST")
 
 	//Find Product Berdasarkan Limit
-	r.HandleFunc("/products", GetProductsLimit).Queries(
-		"limit", "{limit}",
-		"offset", "{offset}",
-	).Methods("OPTIONS", "GET")
+	r.HandleFunc("/products", GetProductsLimit).Methods("OPTIONS", "GET")
 
 	//Find Product Berdasarkan Id
 	r.HandleFunc("/product/{id}", GetProductId).Methods("OPTIONS", "GET")

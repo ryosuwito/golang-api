@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -68,19 +69,16 @@ func CreateUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUsersLimit(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	var limit interface{}
-	var offset interface{}
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 
-	limit = vars["limit"]
-	offset = vars["offset"]
-
-	if limit == "" {
+	if limit < 1 {
 		limit = 10
 	}
 
-	if offset == "" {
-		offset = 0
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+
+	if limit < 1 {
+		limit = 0
 	}
 
 	dbUsers := []structs.Users{}
@@ -135,6 +133,11 @@ func UpdateUserById(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(payloads, &dbUsers)
 	if dbUsers.Role == "0" {
 		dbUsers.Role = "users"
+
+		if !dbUsers.Status {
+			DB.Model(&dbUsers).Update(&dbUsers)
+			DB.Model(&dbUsers).Updates(map[string]interface{}{"status": false})
+		}
 		DB.Model(&dbUsers).Update(dbUsers)
 
 		res := structs.Result{Code: 200, Data: dbUsers, Message: "Berhasil Update Data Users"}
@@ -149,6 +152,10 @@ func UpdateUserById(w http.ResponseWriter, r *http.Request) {
 		w.Write(result)
 	} else if dbUsers.Role == "1" {
 		dbUsers.Role = "admin"
+		if !dbUsers.Status {
+			DB.Model(&dbUsers).Update(&dbUsers)
+			DB.Model(&dbUsers).Updates(map[string]interface{}{"status": false})
+		}
 		DB.Model(&dbUsers).Update(dbUsers)
 
 		res := structs.Result{Code: 200, Data: dbUsers, Message: "Berhasil Update Data Users"}
@@ -202,12 +209,16 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	payloads, _ := ioutil.ReadAll(r.Body)
 
 	var dbUsers structs.Users
+	var userLogin structs.UsersLogin
 	DB, _ := gorm.Open("mysql", "root:@/db_nasabah?charset=utf8&parseTime=True&loc=Local")
 
 	json.Unmarshal(payloads, &dbUsers)
-	DB.Where("email = ? AND password >= ?", "jinzhu", "22").Find(&dbUsers)
+	DB.Where("email = ? AND password >= ?", &dbUsers.Email, &dbUsers.Password).Find(&dbUsers)
 
-	res := structs.Result{Code: 200, Data: dbUsers, Message: "Berhasil Login"}
+	userLogin.ID = dbUsers.ID
+	userLogin.Email = dbUsers.Email
+	userLogin.Password = dbUsers.Password
+	res := structs.Result{Code: 200, Data: userLogin, Message: "Berhasil Login"}
 
 	result, err := json.Marshal(res)
 	if err != nil {

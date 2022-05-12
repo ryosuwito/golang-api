@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -34,19 +35,16 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetProductsLimit(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	var limit interface{}
-	var offset interface{}
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 
-	limit = vars["limit"]
-	offset = vars["offset"]
-
-	if limit == "" {
+	if limit < 1 {
 		limit = 10
 	}
 
-	if offset == "" {
-		offset = 0
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+
+	if limit < 1 {
+		limit = 0
 	}
 
 	dbProducts := []structs.Products{}
